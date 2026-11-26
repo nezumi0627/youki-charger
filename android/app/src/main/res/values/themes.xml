@@ -1,0 +1,6 @@
+<resources>
+    <style name="AppTheme" parent="android:Theme.Material.Light">
+        <item name="android:colorAccent">#6A3FB1</item>
+        <item name="android:windowBackground">#F7F5FB</item>
+    </style>
+</resources>
