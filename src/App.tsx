@@ -257,12 +257,17 @@ export default function App() {
   );
 
   return (
-    <main>
-      <h1>妖気チャージ Web</h1>
-      <p className="note">
-        解析とコマンド生成はこのページで行い、NFC通信だけを NFC Tools（Advanced NFC Commands）に委譲する構成です。
-        データはこの端末の中だけで処理され、外部に送信されません。
-      </p>
+    <>
+      <header className="app-header">
+        <div className="inner">
+          <h1>妖気チャージ Web</h1>
+          <p>
+            解析とコマンド生成はこのページで行い、NFC通信だけを NFC Tools（Advanced NFC Commands）に委譲する構成です。
+            データはこの端末の中だけで処理され、外部に送信されません。
+          </p>
+        </div>
+      </header>
+      <main>
       {copied && <p className="ok">{copied}</p>}
 
       <section className="card">
@@ -372,7 +377,7 @@ export default function App() {
         </label>
         {parseError && <p className="error">{parseError}</p>}
         {capture && summary && (
-          <div>
+          <div className="status-box">
             <p className="kv">現在の妖気</p>
             <p className="aura">{summary.aura === "" ? "—" : summary.aura}</p>
             <p>
@@ -522,10 +527,11 @@ export default function App() {
         )}
       </section>
 
-      <p className="note">
-        注意: NFC Tools側の仕様（連続送信・認証維持・応答のコピー形式）は実機検証で確定させます。
-        検証が済むまでは、書き込み系コマンドは無害テストから順に試してください。
-      </p>
-    </main>
+        <p className="note footer-note">
+          注意: NFC Tools側の仕様（連続送信・認証維持・応答のコピー形式）は実機検証で確定させます。
+          検証が済むまでは、書き込み系コマンドは無害テストから順に試してください。
+        </p>
+      </main>
+    </>
   );
 }
