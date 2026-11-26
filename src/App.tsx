@@ -293,14 +293,20 @@ export default function App() {
       </section>
 
       <section className="card">
-        <h2>Android: 専用アプリで直接NFC</h2>
+        <h2>Android: NFC Tools（Android版）で同じ手順</h2>
         <p className="note">
-          Androidでは NFC Tools を挟まず、専用アプリが直接メダルと通信します（読み取り・チャージ・修復・復元までアプリ内で完結）。
-          APK は GitHub の Releases から入手できます。このページは Android でもダンプ解析・バックアップ管理に使えます。
+          Androidでも経路は同じです。このページが作るコマンドを、Android版 NFC Tools の Advanced NFC Commands で実行します
+          （ブラウザの Web NFC は NDEF専用で、メダルの認証・生ページ読み書きには使えないためです）。
         </p>
-        <p>
-          <a href="https://github.com/nezumi0627/youki-charger/releases">Releases（Android版APK）</a>
-        </p>
+        <details>
+          <summary>Android版での使い方と無料範囲</summary>
+          <ul>
+            <li>Play ストアで NFC Tools（wakdev、無料）を入れる</li>
+            <li>メニューから「Advanced NFC commands」を開き、I/O class は NfcA を選ぶ</li>
+            <li>あとは iOS と同じです。Data 欄に貼り付け → 送信 → かざす → Log の応答をこのページに貼る</li>
+            <li>無料範囲: Android版では Advanced Commands は通常機能として追加されており、Pro 限定の表記はありません（無料で使える公算が高いですが未確定）。Pro Edition は別アプリの買い切りで、この用途では不要です</li>
+          </ul>
+        </details>
       </section>
 
       <section className="card">
