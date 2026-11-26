@@ -72,6 +72,24 @@ export default function App() {
   const uid = useMemo(() => parseUID(uidText), [uidText]);
   const [format, setFormat] = useState<FormatStyle>("tools");
   const [copied, setCopied] = useState("");
+  const [themeMode, setThemeMode] = useState<"dark" | "light" | "auto">(
+    () => (localStorage.getItem("youki-theme") as "dark" | "light" | "auto" | null) ?? "dark",
+  );
+
+  useEffect(() => {
+    localStorage.setItem("youki-theme", themeMode);
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const apply = () => {
+      const resolved = themeMode === "auto" ? (mq.matches ? "dark" : "light") : themeMode;
+      document.documentElement.dataset.theme = resolved;
+      document
+        .querySelector('meta[name="theme-color"]')
+        ?.setAttribute("content", resolved === "dark" ? "#000000" : "#ffffff");
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [themeMode]);
 
   const [readCommands, setReadCommands] = useState<string[]>([]);
   const [authTestCommands, setAuthTestCommands] = useState<string[]>([]);
@@ -263,56 +281,17 @@ export default function App() {
           <h1>妖気チャージ Web</h1>
           <p>
             解析とコマンド生成はこのページで行い、NFC通信だけを NFC Tools（Advanced NFC Commands）に委譲する構成です。
-            データはこの端末の中だけで処理され、外部に送信されません。
+            データはこの端末の中だけで処理され、外部に送信されません。<a href="#guide">使い方と無料範囲</a>
           </p>
+          <div className="segmented theme-switch" role="group" aria-label="テーマ">
+            <button type="button" className={themeMode === "dark" ? "selected" : ""} onClick={() => setThemeMode("dark")}>ダーク</button>
+            <button type="button" className={themeMode === "light" ? "selected" : ""} onClick={() => setThemeMode("light")}>ライト</button>
+            <button type="button" className={themeMode === "auto" ? "selected" : ""} onClick={() => setThemeMode("auto")}>自動</button>
+          </div>
         </div>
       </header>
       <main>
       {copied && <p className="ok">{copied}</p>}
-
-      <section className="card">
-        <h2>iOS: NFC Tools の使い方と無料範囲</h2>
-        <p className="note">
-          iOSでは、このページが作るコマンドを NFC Tools（wakdev）の Advanced NFC Commands で実行します。
-          下の STEP 1〜4 がその手順です。まず NFC Tools を入れてください（App Store、無料）。
-        </p>
-        <details>
-          <summary>使い方（初回セットアップと実行の流れ）</summary>
-          <ol>
-            <li>NFC Tools を開き、下部の「Other」→「Advanced NFC commands」を選ぶ</li>
-            <li>初回は免責の確認（I Understand）をタップする</li>
-            <li>I/O class は <strong>NfcA</strong> を選ぶ</li>
-            <li>このページでコピーしたコマンドを Data 欄に貼り付ける（形式は「NFC Tools形式」が正書式です）</li>
-            <li>Send を押してから、メダルを iPhone の上部にかざす。<strong>認証は1回のかざしの中だけ有効</strong>なので、コマンドは全部まとめて1回で送ってください</li>
-            <li>終わったら Log の応答をコピーして、このページに貼り付けます。コピーできない場合は、NFC Tools のメモリ読み取りからダンプ（.bin）を書き出して STEP 2 で取り込んでください</li>
-          </ol>
-        </details>
-        <details>
-          <summary>無料で使える機能（2026-11-27 調査）</summary>
-          <ul>
-            <li><strong>無料</strong>: タグの読み取り（UID・情報表示）、メモリ読み取り、Advanced NFC Commands の送信（iOS での利用実例が複数あり、いずれも課金なしで全手順を紹介しています。ただし公式に「無料」と明記された文はありません）</li>
-            <li><strong>未確認（任意機能）</strong>: ダンプの書き出し、お気に入りの登録・書き出し、Write Dump。これらは必須手順には使っていません。無料で使えたら便利な追加機能として案内しています</li>
-            <li><strong>Pro Edition（¥600・買い切り）</strong>: iOS版で何が解放されるかは公式に公表されていません。このページの用途では購入する根拠はないため、不要です</li>
-          </ul>
-        </details>
-      </section>
-
-      <section className="card">
-        <h2>Android: NFC Tools（Android版）で同じ手順</h2>
-        <p className="note">
-          Androidでも経路は同じです。このページが作るコマンドを、Android版 NFC Tools の Advanced NFC Commands で実行します
-          （ブラウザの Web NFC は NDEF専用で、メダルの認証・生ページ読み書きには使えないためです）。
-        </p>
-        <details>
-          <summary>Android版での使い方と無料範囲</summary>
-          <ul>
-            <li>Play ストアで NFC Tools（wakdev、無料）を入れる</li>
-            <li>メニューから「Advanced NFC commands」を開き、I/O class は NfcA を選ぶ</li>
-            <li>あとは iOS と同じです。Data 欄に貼り付け → 送信 → かざす → Log の応答をこのページに貼る</li>
-            <li>無料範囲: Android版では Advanced Commands は通常機能として追加されており、Pro 限定の表記はありません（無料で使える公算が高いですが未確定）。Pro Edition は別アプリの買い切りで、この用途では不要です</li>
-          </ul>
-        </details>
-      </section>
 
       <section className="card">
         <span className="step">STEP 1</span>
@@ -525,6 +504,50 @@ export default function App() {
             {verifyResult && <p className={verifyResult.startsWith("照合OK") ? "ok" : "error"}>{verifyResult}</p>}
           </div>
         )}
+      </section>
+
+      <section className="card" id="guide">
+        <h2>iOS: NFC Tools の使い方と無料範囲</h2>
+        <p className="note">
+          iOSでは、このページが作るコマンドを NFC Tools（wakdev）の Advanced NFC Commands で実行します。
+          STEP 1〜4 がその手順です。まず NFC Tools を入れてください（App Store、無料）。
+        </p>
+        <details>
+          <summary>使い方（初回セットアップと実行の流れ）</summary>
+          <ol>
+            <li>NFC Tools を開き、下部の「Other」→「Advanced NFC commands」を選ぶ</li>
+            <li>初回は免責の確認（I Understand）をタップする</li>
+            <li>I/O class は <strong>NfcA</strong> を選ぶ</li>
+            <li>このページでコピーしたコマンドを Data 欄に貼り付ける（形式は「NFC Tools形式」が正書式です）</li>
+            <li>Send を押してから、メダルを iPhone の上部にかざす。<strong>認証は1回のかざしの中だけ有効</strong>なので、コマンドは全部まとめて1回で送ってください</li>
+            <li>終わったら Log の応答をコピーして、このページに貼り付けます。コピーできない場合は、NFC Tools のメモリ読み取りからダンプ（.bin）を書き出して STEP 2 で取り込んでください</li>
+          </ol>
+        </details>
+        <details>
+          <summary>無料で使える機能（2026-11-27 調査）</summary>
+          <ul>
+            <li><strong>無料</strong>: タグの読み取り（UID・情報表示）、メモリ読み取り、Advanced NFC Commands の送信（iOS での利用実例が複数あり、いずれも課金なしで全手順を紹介しています。ただし公式に「無料」と明記された文はありません）</li>
+            <li><strong>未確認（任意機能）</strong>: ダンプの書き出し、お気に入りの登録・書き出し、Write Dump。これらは必須手順には使っていません。無料で使えたら便利な追加機能として案内しています</li>
+            <li><strong>Pro Edition（¥600・買い切り）</strong>: iOS版で何が解放されるかは公式に公表されていません。このページの用途では購入する根拠はないため、不要です</li>
+          </ul>
+        </details>
+      </section>
+
+      <section className="card">
+        <h2>Android: NFC Tools（Android版）で同じ手順</h2>
+        <p className="note">
+          Androidでも経路は同じです。このページが作るコマンドを、Android版 NFC Tools の Advanced NFC Commands で実行します
+          （ブラウザの Web NFC は NDEF専用で、メダルの認証・生ページ読み書きには使えないためです）。
+        </p>
+        <details>
+          <summary>Android版での使い方と無料範囲</summary>
+          <ul>
+            <li>Play ストアで NFC Tools（wakdev、無料）を入れる</li>
+            <li>メニューから「Advanced NFC commands」を開き、I/O class は NfcA を選ぶ</li>
+            <li>あとは iOS と同じです。Data 欄に貼り付け → 送信 → かざす → Log の応答をこのページに貼る</li>
+            <li>無料範囲: Android版では Advanced Commands は通常機能として追加されており、Pro 限定の表記はありません（無料で使える公算が高いですが未確定）。Pro Edition は別アプリの買い切りで、この用途では不要です</li>
+          </ul>
+        </details>
       </section>
 
         <p className="note footer-note">
