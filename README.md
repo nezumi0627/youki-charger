@@ -7,9 +7,10 @@
 
 | プラットフォーム | NFCの経路 |
 | --- | --- |
-| Android | 専用アプリ（このリポジトリの `android/`）が直接NFC通信する |
-| iOS | Web版がコマンドを生成し、**NFC Tools**（Advanced NFC Commands）で実行する手動経路 |
+| iOS / Android | Web版がコマンドを生成し、**NFC Tools**（Advanced NFC Commands）で実行する手動経路 |
 | PC等 | Web版でダンプ（.bin）の解析・バックアップ管理ができる |
+
+ブラウザの Web NFC は NDEF専用で、メダルの認証（PWD_AUTH）や生ページの読み書きには使えないため、モバイルでは NFC Tools 経由に統一しています。
 
 ## Web版（`src/`、ルート）
 
@@ -27,14 +28,6 @@ bun run build    # 型チェック + 本番ビルド（dist/）
 
 デプロイは `.github/workflows/pages.yml`（main への push で GitHub Pages へ自動デプロイ）。
 
-## Android版（`android/`）
-
-Kotlin のネイティブアプリ。`MifareUltralight.transceive` で直接通信します。
-
-- 読み取り（妖気・回数・破損診断）、チャージ、回数リセット、修復、作り直し、バックアップ復元
-- 書き込み安全策: 書込み前の内部バックアップ自動保存、前回読み取りとの照合、ページごとの読み戻し確認、最終確認
-- ビルドは `.github/workflows/android.yml`（GitHub Actions）。ベータ版APKは Releases に添付されます
-
 ## コア仕様（全プラットフォーム共通）
 
 - 鍵導出: HMAC-SHA256 ×2（ニブルS-box変換を挟む）、パスワードは導出結果の下位4バイト
@@ -44,7 +37,7 @@ Kotlin のネイティブアプリ。`MifareUltralight.transceive` で直接通�
 
 ## クレジット
 
-- iOS版のオリジナル実装（SwiftUI + CoreNFC）は ゆう（Yu08083）の `youki-charger-ios`。本リポジトリは本人の了承を得て、iOS版・Web版・Android版を1つに統合したものです
+- iOS版のオリジナル実装（SwiftUI + CoreNFC）は ゆう（Yu08083）の `youki-charger-ios`。本リポジトリは本人の了承を得て、iOS版とWeb版を1つに統合したものです
 - メダルのデータ形式・暗号仕様は Flipper Zero 向けプロジェクト等の公開情報を土台にしています
 
 ## 注意
