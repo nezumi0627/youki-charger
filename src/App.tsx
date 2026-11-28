@@ -72,6 +72,8 @@ export default function App() {
   const uid = useMemo(() => parseUID(uidText), [uidText]);
   const [format, setFormat] = useState<FormatStyle>("tools");
   const [copied, setCopied] = useState("");
+  const [readHint, setReadHint] = useState("");
+  const [writeHint, setWriteHint] = useState("");
   const [themeMode, setThemeMode] = useState<"dark" | "light" | "auto">(
     () => (localStorage.getItem("youki-theme") as "dark" | "light" | "auto" | null) ?? "dark",
   );
@@ -166,6 +168,7 @@ export default function App() {
     setVerifyResult("");
     localStorage.setItem(RAW_KEY, bytesToHex(next.raw));
     if (!uidText) setUidText(bytesToHex(next.uid));
+    scrollToStep("step3");
   }
 
   async function handleParsePaste() {
@@ -209,6 +212,7 @@ export default function App() {
         const commands = await buildNoOpTestPlan(capture);
         setPlan({ commands, verifyCommands: [], changedPages: [], targetCiphertext: captureCiphertext(capture) });
         setPlanLabel("無害テスト（ページ6を同じ内容で書き戻し）");
+        scrollToStep("step4");
         return;
       }
       let targetPlain: Uint8Array;
@@ -242,6 +246,7 @@ export default function App() {
       downloadBin(capture.raw, `妖気バックアップ_${stamp()}.bin`);
       setPlan(next);
       setPlanLabel(label);
+      scrollToStep("step4");
     } catch (e) {
       setPlanError(e instanceof Error ? e.message : String(e));
     }
@@ -268,11 +273,25 @@ export default function App() {
     <div className="segmented" role="group" aria-label="コピー形式">
       {(["tools", "colonLines", "plain"] as FormatStyle[]).map((style) => (
         <button key={style} className={format === style ? "selected" : ""} onClick={() => setFormat(style)}>
-          {style === "tools" ? "NFC Tools形式" : style === "colonLines" ? "1行ずつ（コロン）" : "コロンなし"}
+          {style === "tools" ? "NFC Tools" : style === "colonLines" ? "1行ずつ" : "コロンなし"}
         </button>
       ))}
     </div>
   );
+
+  const scrollToStep = (id: string) => {
+    requestAnimationFrame(() =>
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+  };
+
+  const progressSteps = [
+    { id: "step1", label: "UID", done: uid !== null },
+    { id: "step2", label: "読み取り", done: capture !== null },
+    { id: "step3", label: "操作", done: plan !== null },
+    { id: "step4", label: "書き込み", done: verifyResult.startsWith("照合OK") },
+  ];
+  const activeStep = progressSteps.findIndex((s) => !s.done);
 
   return (
     <>
@@ -280,8 +299,7 @@ export default function App() {
         <div className="inner">
           <h1>妖気チャージ Web</h1>
           <p>
-            解析とコマンド生成はこのページで行い、NFC通信だけを NFC Tools（Advanced NFC Commands）に委譲する構成です。
-            データはこの端末の中だけで処理され、外部に送信されません。<a href="#guide">使い方と無料範囲</a>
+            妖気メダルの解析とコマンド生成を行うページです。NFC通信は NFC Tools に委譲し、データは端末内だけで処理します。<a href="#guide">使い方と無料範囲</a>
           </p>
           <div className="segmented theme-switch" role="group" aria-label="テーマ">
             <button type="button" className={themeMode === "dark" ? "selected" : ""} onClick={() => setThemeMode("dark")}>ダーク</button>
@@ -292,11 +310,25 @@ export default function App() {
       </header>
       <main>
       {copied && <p className="ok">{copied}</p>}
+      <nav className="progress" aria-label="進捗">
+        {progressSteps.map((s, i) => (
+          <button
+            key={s.id}
+            type="button"
+            className={`pstep${s.done ? " done" : ""}${i === activeStep ? " active" : ""}`}
+            onClick={() => scrollToStep(s.id)}
+          >
+            <span className="num">{s.done ? "✓" : i + 1}</span>
+            {s.label}
+          </button>
+        ))}
+      </nav>
 
-      <section className="card">
-        <span className="step">STEP 1</span>
+      <section className="card" id="step1">
+        <span className="step">STEP 1{uid && " ✓"}</span>
         <h2>メダルのUID</h2>
-        <label htmlFor="uid">UID（7バイトのHEX。NFC Toolsでタグを読むと表示されます）</label>
+        <p className="flow-hint">NFC Tools でタグを読み、表示された UID を入力してください。</p>
+        <label htmlFor="uid">UID（7バイトのHEX）</label>
         <input
           id="uid"
           type="text"
@@ -323,15 +355,17 @@ export default function App() {
         </details>
       </section>
 
-      <section className="card">
-        <span className="step">STEP 2</span>
+      <section className="card" id="step2">
+        <span className="step">STEP 2{capture && " ✓"}</span>
         <h2>メダルを読み取る</h2>
-        <p className="note">下のコマンド列を NFC Tools（Other → Advanced NFC commands、I/O class は NfcA）で実行し、応答をまとめて貼り付けてください。応答がコピーできない場合は、NFC Tools のメモリ読み取りからダンプ（.bin）を書き出して下の取り込みでも解析できます。</p>
+        <p className="flow-hint">1. コマンドをコピー → 2. NFC Tools で送信 → 3. 応答を貼って解析</p>
+        <p className="note">NFC Tools の場所: Other → Advanced NFC commands（I/O class は NfcA）。応答をコピーできない場合は、メモリ読み取りからダンプ（.bin）を書き出して下の取り込みでも解析できます。</p>
         {formatPicker}
         <textarea readOnly value={uid ? formatCommands(readCommands, format) : "UIDを入力すると生成されます"} />
-        <button disabled={!uid} onClick={() => copyText(formatCommands(readCommands, format), setCopied, "読込コマンド")}>
+        <button disabled={!uid} onClick={() => { copyText(formatCommands(readCommands, format), setCopied, "読込コマンド"); setReadHint("NFC Tools で送信してください。終わったら応答を下の欄に貼って「解析する」を押します。"); }}>
           読込コマンドをコピー
         </button>
+        {readHint && <p className="ok">{readHint}</p>}
         <label htmlFor="paste">NFC Toolsの応答（HEX）</label>
         <textarea
           id="paste"
@@ -342,8 +376,8 @@ export default function App() {
         <button className="primary" disabled={!paste} onClick={handleParsePaste}>
           解析する
         </button>
-        <label>
-          または180バイトのダンプ（.bin）を取り込む
+        <label className="file-btn">
+          ダンプ（.bin）を取り込む
           <input
             type="file"
             accept=".bin,application/octet-stream"
@@ -376,8 +410,8 @@ export default function App() {
         )}
       </section>
 
-      <section className="card">
-        <span className="step">STEP 3</span>
+      <section className="card" id="step3">
+        <span className="step">STEP 3{plan && " ✓"}</span>
         <h2>操作を選ぶ</h2>
         {!capture && <p className="note">先に STEP 2 でメダルを読み取ってください。</p>}
         <div className="segmented" role="group" aria-label="遊ぶゲーム">
@@ -412,7 +446,7 @@ export default function App() {
               onClick={() => setSelectedID(entry.id)}
             >
               <span>{entry.id === 0 ? "妖気なし" : displayName(entry.name)}</span>
-              {entry.id === selectedID && <span>✓</span>}
+              {entry.id === selectedID && <span className="check">✓</span>}
             </li>
           ))}
           {filtered.length === 0 && <li>該当する妖気がありません</li>}
@@ -434,8 +468,8 @@ export default function App() {
             妖気なしで作り直すコマンドを生成
           </button>
         )}
-        <label>
-          バックアップから復元（復元元の .bin を選択）
+        <label className="file-btn">
+          復元元のバックアップ（.bin）を選ぶ
           <input
             type="file"
             accept=".bin,application/octet-stream"
@@ -464,8 +498,8 @@ export default function App() {
         {planError && <p className="error">{planError}</p>}
       </section>
 
-      <section className="card">
-        <span className="step">STEP 4</span>
+      <section className="card" id="step4">
+        <span className="step">STEP 4{verifyResult.startsWith("照合OK") && " ✓"}</span>
         <h2>書き込みと確認</h2>
         {!plan && <p className="note">STEP 3 でコマンドを生成すると、ここに表示されます。生成時に書込み前のバックアップ（.bin）が自動で保存されます。</p>}
         {plan && (
@@ -477,16 +511,18 @@ export default function App() {
               )}
             </p>
             <p className="error">実行中は完了までメダルを離さないでください。</p>
+            <p className="flow-hint">1. 書込コマンドをコピー → 2. NFC Tools で送信 → 3. 照合コマンドで確認</p>
             {formatPicker}
             <textarea readOnly value={formatCommands(plan.commands, format)} />
-            <button className="primary" onClick={() => copyText(formatCommands(plan.commands, format), setCopied, "書込コマンド")}>
+            <button className="primary" onClick={() => { copyText(formatCommands(plan.commands, format), setCopied, "書込コマンド"); setWriteHint("NFC Tools で送信してください。終わったら下の照合コマンドも実行します。"); }}>
               書込コマンドをコピー
             </button>
+            {writeHint && <p className="ok">{writeHint}</p>}
             {plan.verifyCommands.length > 0 && (
               <>
                 <label>照合用の読込コマンド（書込み後に、もう一度かざして実行）</label>
                 <textarea readOnly value={formatCommands(plan.verifyCommands, format)} />
-                <button onClick={() => copyText(formatCommands(plan.verifyCommands, format), setCopied, "照合コマンド")}>
+                <button onClick={() => { copyText(formatCommands(plan.verifyCommands, format), setCopied, "照合コマンド"); setWriteHint("NFC Tools で送信し、応答を下の欄に貼って「照合する」を押してください。"); }}>
                   照合コマンドをコピー
                 </button>
               </>
@@ -518,7 +554,7 @@ export default function App() {
             <li>NFC Tools を開き、下部の「Other」→「Advanced NFC commands」を選ぶ</li>
             <li>初回は免責の確認（I Understand）をタップする</li>
             <li>I/O class は <strong>NfcA</strong> を選ぶ</li>
-            <li>このページでコピーしたコマンドを Data 欄に貼り付ける（形式は「NFC Tools形式」が正書式です）</li>
+            <li>このページでコピーしたコマンドを Data 欄に貼り付ける（形式は「NFC Tools」が正書式です）</li>
             <li>Send を押してから、メダルを iPhone の上部にかざす。<strong>認証は1回のかざしの中だけ有効</strong>なので、コマンドは全部まとめて1回で送ってください</li>
             <li>終わったら Log の応答をコピーして、このページに貼り付けます。コピーできない場合は、NFC Tools のメモリ読み取りからダンプ（.bin）を書き出して STEP 2 で取り込んでください</li>
           </ol>
