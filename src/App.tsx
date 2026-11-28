@@ -327,7 +327,7 @@ export default function App() {
       <section className="card" id="step1">
         <span className="step">STEP 1{uid && " ✓"}</span>
         <h2>メダルのUID</h2>
-        <p className="flow-hint">NFC Tools でタグを読み、表示された UID を入力してください。</p>
+        <p className="flow-hint">NFC Tools の「Read」でメダルを読み、表示された UID を入力してください。STEP 2 以降のコマンドは、この UID から作られます。</p>
         <label htmlFor="uid">UID（7バイトのHEX）</label>
         <input
           id="uid"
@@ -551,11 +551,11 @@ export default function App() {
         <details>
           <summary>使い方（初回セットアップと実行の流れ）</summary>
           <ol>
-            <li>NFC Tools を開き、「Other」→「Advanced NFC commands」を選ぶ</li>
-            <li>初回は免責の確認（I assume）をタップする</li>
-            <li>このページでコピーしたコマンドを Data 欄に貼り付ける（形式は「NFC Tools」が正書式です）。<strong>iOS版に I/O class の選択はありません</strong>（Android版だけの項目です）</li>
-            <li>「Send command」を押してから、メダルを iPhone の上部にかざす。<strong>認証は1回のかざしの中だけ有効</strong>なので、コマンドは全部まとめて1回で送ってください</li>
-            <li>終わったら Logs の「Share」から応答を共有・コピーして、このページに貼り付けます。うまくいかない場合は、NFC Tools の「Read / Edit memory」からダンプ（.bin）を書き出して STEP 2 で取り込んでください</li>
+            <li><strong>UID を確認する</strong>: NFC Tools の「Read」でメダルを読み、表示された UID を控える</li>
+            <li><strong>コマンドを作る</strong>: このページの STEP 1 に UID を入力すると STEP 2 に読込コマンドが表示されるので、「読込コマンドをコピー」を押す（コマンドはこのページで作るものです）</li>
+            <li><strong>NFC Tools で送る</strong>: 「Other」→「Advanced NFC commands」を開き（初回は免責の確認ダイアログが出ます）、Data 欄に貼り付けて「Send command」を押し、メダルを iPhone の上部にかざす。<strong>iOS版に I/O class の選択はありません</strong>（Android版だけの項目です）。<strong>認証は1回のかざしの中だけ有効</strong>なので、コマンドは全部まとめて1回で送ってください</li>
+            <li><strong>結果を戻す</strong>: Logs の「Share」から応答を共有・コピーして、STEP 2 に貼り付けて「解析する」を押す。うまくいかない場合は「Read / Edit memory」からダンプ（.bin）を書き出して STEP 2 で取り込んでください</li>
+            <li><strong>書き込みも同じ流れ</strong>: STEP 3 で操作を選ぶと STEP 4 に書込コマンドが出るので、コピーして同じように送ります</li>
           </ol>
         </details>
         <details>
@@ -578,8 +578,9 @@ export default function App() {
           <summary>Android版での使い方と無料範囲</summary>
           <ul>
             <li>Play ストアで NFC Tools（wakdev、無料）を入れる</li>
+            <li>NFC Tools の読み取りでメダルの UID を読み、このページの STEP 1 に入力して、STEP 2 の「読込コマンドをコピー」を押す</li>
             <li>「OTHER」タブから「Advanced NFC commands」を開き、画面上部の I/O Class が「NfcA (ISO 14443-3A)」になっていることを確認する（通常は最初からこの選択です）</li>
-            <li>あとは iOS と同じです。Data 欄に貼り付け → 送信 → かざす → Log の応答をこのページに貼る</li>
+            <li>Data 欄に貼り付け → 送信 → かざす → Logs の応答をこのページに貼る</li>
             <li>無料範囲: Android版では Advanced Commands は通常機能として追加されており、Pro 限定の表記はありません（無料で使える公算が高いですが未確定）。Pro Edition は別アプリの買い切りで、この用途では不要です</li>
           </ul>
         </details>
