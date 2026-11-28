@@ -78,6 +78,7 @@ section.card {
   border: none;
   padding: 0;
   margin-top: 32px;
+  scroll-margin-top: 58px;
 }
 
 /* Step label: plain small gray text, not a badge. */
@@ -137,7 +138,8 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 button.primary { background: var(--accent); color: #fff; }
-button:disabled { opacity: 0.35; cursor: default; }
+button:disabled { opacity: 1; background: var(--fill); color: var(--sub); cursor: default; }
+button.primary:disabled { background: var(--fill-strong); color: var(--sub); }
 button:active:not(:disabled) { opacity: 0.75; }
 
 /* iOS-style segmented control. */
@@ -202,7 +204,7 @@ ul.youki-list li {
 }
 ul.youki-list li + li { border-top: 1px solid var(--hair); }
 ul.youki-list li.selected { background: var(--fill); font-weight: 600; }
-ul.youki-list li.selected::after { content: "✓"; color: var(--accent-text); font-weight: 700; }
+ul.youki-list li .check { color: var(--accent-text); font-weight: 700; }
 
 /* Details: separated by hairlines, plain text. */
 details {
@@ -232,3 +234,75 @@ body { overflow-x: clip; }
   border-top: 1px solid var(--hair);
   padding-top: 14px;
 }
+
+/* Progress bar: sticky, shows where you are in STEP 1-4. Tap a step to jump. */
+.progress {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 4px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--hair);
+  margin: 14px -20px 0;
+  padding: 8px 20px;
+}
+.progress .pstep {
+  flex: 1 1 0;
+  width: auto;
+  min-height: 34px;
+  margin: 0;
+  padding: 4px 2px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sub);
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.progress .num {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--hair);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.progress .pstep.active { color: var(--ink); font-weight: 700; }
+.progress .pstep.active .num { border-color: var(--accent-text); color: var(--accent-text); }
+.progress .pstep.done .num { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* One-line guidance for what to do in this step. */
+.flow-hint {
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 600;
+  margin: 2px 0 6px;
+}
+
+/* File inputs presented as a normal secondary button. */
+label.file-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  margin: 10px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--fill);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+label.file-btn:active { opacity: 0.75; }
+label.file-btn input[type="file"] { display: none; }
