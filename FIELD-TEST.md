@@ -11,7 +11,7 @@
    - Cloudflare Pages / Netlify などでも可（非公開リポジトリのままでも使える）
 2. iPhone に **NFC Tools**（wakdev）を入れる。**まず無料のまま**始める（Pro が要る機能を切り分けるため）
 3. NFC Tools の「Other → Advanced NFC commands」を開き、初回の免責確認を済ませる
-   - I/O class の選択肢を確認し、**NfcA** を選ぶ（デフォルトが違う場合のみ）
+   - iOS版に I/O class の選択はありません（2026-11-29 確認済み。Android版だけの項目で、デフォルトは NfcA）
 4. 妖気メダルを1枚用意する
 
 ## STEP A: UID取得
